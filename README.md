@@ -12,15 +12,16 @@ Follow the [documentation](https://docs.microsoft.com/en-ca/azure/cognitive-serv
 Retrieve the API key for Translator from Azure portal and store it in an environment variable.
 I have used Powershell to add the environment variable. You can use any other approach to create an environment variable named `TranslatorAPIkey`.
 
-```Powershell```
+```Powershell
 
 [System.Environment]::SetEnvironmentVariable('TranslatorAPIkey','YOUR__API__KEY', 'Machine')
 
 ```
 
 ### List of Languages for subtitles
+
 The subtitles are translated into the languages listed below.
-For the complete list of languages supported by the translator service, refer to the documentation.
+For the complete list of [languages supported](https://docs.microsoft.com/en-ca/azure/cognitive-services/translator/language-support) by the translator service, refer to the documentation.
 
 | Language code | Language name |
 | ---           | ---           |
