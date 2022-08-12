@@ -29,38 +29,38 @@ For the complete list of [languages supported](https://docs.microsoft.com/en-ca/
 | sq            | Albanian      |
 | ar            | Arabic        |
 | hy            | Armenian      |
-| bn|Bangla|
-| bg|Bulgarian|
-| zh-Hans|ChineseSimplified|
-| hr|Croatian|
-| cs|Czek|
-| da|Danish|
-| nl|Dutch|
-| fil|Filipino|
-| fi|Finnish|
-| fr|French|
-| de|German|
-| el|Greek|
-| he|Hebrew|
-| hi|Hindi|
-| hu|Hungarian|
-| id|Indonesian|
-| ga|Irish|
-| it|Italian|
-| ja|Japanese|
-| ko|Korean|
-| ms|Malay|
-| my|Myanmar|
-| ne|Nepali|
-| nb|Norwegian|
-| fa|Persian|
-| pl|Polish|
-| pt-pt|Portuguese|
-| ro|Romanian|
-| ru|Russian|
-| es|Spanish|
-| sv|Swedish|
-| th|Thai|
-| tr|Turkish|
-| uk|Ukrainian|
-| vi|Vietnamese|
+| bn            | Bangla        |
+| bg            | Bulgarian     |
+| zh-Hans       | ChineseSimplified |
+| hr            | Croatian      |
+| cs            | Czek          |
+| da            | Danish        |
+| nl            | Dutch         |
+| fil           | Filipino      |
+| fi            | Finnish       |
+| fr            | French        |
+| de            | German        |
+| el            | Greek         |
+| he            | Hebrew        |
+| hi            | Hindi         |
+| hu            | Hungarian     |
+| id            | Indonesian    |
+| ga            | Irish         |
+| it            | Italian       |
+| ja            | Japanese      |
+| ko            | Korean        |
+| ms            | Malay         |
+| my            | Myanmar       |
+| ne            | Nepali        |
+| nb            | Norwegian     |
+| fa            | Persian       |
+| pl            | Polish        |
+| pt-pt         | Portuguese    |
+| ro            | Romanian      |
+| ru            | Russian       |
+| es            | Spanish       |
+| sv            | Swedish       |
+| th            | Thai          |
+| tr            | Turkish       |
+| uk            | Ukrainian     |
+| vi            | Vietnamese    |
