@@ -13,6 +13,7 @@ namespace YoutubeSubtitlesGenerator
     {
         private static readonly string region = "southeastasia";
         private static readonly string endpoint = "https://api.cognitive.microsofttranslator.com";
+        
 
         static async Task Main(string[] args)
         {
@@ -23,6 +24,8 @@ namespace YoutubeSubtitlesGenerator
             //string route = "/translate?api-version=3.0&from=en&to=fr";
             string textToTranslate = File.ReadAllText(@"C:\Users\niles\Downloads\captions.vtt").Replace("&nbsp;", "");
 
+            string fileName = Path.GetFileNameWithoutExtension(@"C:\Users\niles\Downloads\captions.vtt");
+
             object[] body = new object[] { new { Text = textToTranslate } };
             var requestBody = JsonConvert.SerializeObject(body);
 
@@ -30,7 +33,8 @@ namespace YoutubeSubtitlesGenerator
 
             foreach (KeyValuePair<string, string> languageSetting in languageCodeMap)
             {
-                await TranslateSubtitle(requestBody, languageSetting).ConfigureAwait(false);
+                await TranslateSubtitle(fileName, requestBody, languageSetting)
+                    .ConfigureAwait(false);
             }
 
         }
@@ -80,7 +84,7 @@ namespace YoutubeSubtitlesGenerator
             };
         }
 
-        private static async Task TranslateSubtitle(string textToTranslate, KeyValuePair<string, string> languageSetting)
+        private static async Task TranslateSubtitle(string fileName, string textToTranslate, KeyValuePair<string, string> languageSetting)
         {
             string languageCode = languageSetting.Key.ToString();
             string languageValue = languageSetting.Value.ToString();
@@ -99,12 +103,12 @@ namespace YoutubeSubtitlesGenerator
                 HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
                 // Read response as a string.
                 string result = await response.Content.ReadAsStringAsync();
-                WriteTranslatedText(languageValue, result);
+                WriteTranslatedText(fileName, languageValue, result);
                 // Console.WriteLine(jsonResult.translations.text);
             }
         }
 
-        private static void WriteTranslatedText(string languageValue, string result)
+        private static void WriteTranslatedText(string fileName, string languageValue, string result)
         {
             //Console.WriteLine(result);
             dynamic jsonResult = JsonConvert.DeserializeObject(result);
@@ -113,14 +117,16 @@ namespace YoutubeSubtitlesGenerator
             string convertedOutput = jsonResult.First.translations.First.text;
             Console.WriteLine(convertedOutput);
 
-            File.WriteAllText($@"C:\Users\niles\Downloads\TranslatedOutput\Caption-{languageValue}.vtt", convertedOutput);
+            string outputDirectory = @"C:\Users\niles\Downloads\TranslatedOutput";
+
+            File.WriteAllText($@"{outputDirectory}\{fileName}-{languageValue}.vtt", convertedOutput);
             Console.WriteLine();
         }
 
         private static void BuildRequest(string textToTranslate, string route, HttpRequestMessage request)
         {
             string apiKey = Environment.GetEnvironmentVariable("TranslatorAPIKey", EnvironmentVariableTarget.Machine);
-            Console.WriteLine($"API Key exists : {string.IsNullOrEmpty(apiKey)}");
+            Console.WriteLine($"API Key exists : {!string.IsNullOrEmpty(apiKey)}");
 
             request.Method = HttpMethod.Post;
             request.RequestUri = new Uri(endpoint + route);

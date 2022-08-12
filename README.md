@@ -17,3 +17,49 @@ I have used Powershell to add the environment variable. You can use any other ap
 [System.Environment]::SetEnvironmentVariable('TranslatorAPIkey','YOUR__API__KEY', 'Machine')
 
 ```
+
+### List of Languages for subtitles
+The subtitles are translated into the languages listed below.
+For the complete list of languages supported by the translator service, refer to the documentation.
+
+| Language code | Language name |
+| ---           | ---           |
+| af            | Afrikaans     |
+| sq            | Albanian      |
+| ar            | Arabic        |
+| hy            | Armenian      |
+| bn|Bangla|
+| bg|Bulgarian|
+| zh-Hans|ChineseSimplified|
+| hr|Croatian|
+| cs|Czek|
+| da|Danish|
+| nl|Dutch|
+| fil|Filipino|
+| fi|Finnish|
+| fr|French|
+| de|German|
+| el|Greek|
+| he|Hebrew|
+| hi|Hindi|
+| hu|Hungarian|
+| id|Indonesian|
+| ga|Irish|
+| it|Italian|
+| ja|Japanese|
+| ko|Korean|
+| ms|Malay|
+| my|Myanmar|
+| ne|Nepali|
+| nb|Norwegian|
+| fa|Persian|
+| pl|Polish|
+| pt-pt|Portuguese|
+| ro|Romanian|
+| ru|Russian|
+| es|Spanish|
+| sv|Swedish|
+| th|Thai|
+| tr|Turkish|
+| uk|Ukrainian|
+| vi|Vietnamese|
