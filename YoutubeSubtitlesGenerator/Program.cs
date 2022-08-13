@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,7 +13,6 @@ namespace YoutubeSubtitlesGenerator
 {
     class Program
     {
-        private static readonly string region = "southeastasia";
         private static readonly string endpoint = "https://api.cognitive.microsofttranslator.com";
         
 
@@ -41,47 +42,21 @@ namespace YoutubeSubtitlesGenerator
 
         private static Dictionary<string, string> GetLanguageCodeMapping()
         {
-            return new Dictionary<string, string>() {
-                {"af", "Afrikaans" },
-                {"sq", "Albanian" },
-                {"ar", "Arabic" },
-                {"hy", "Armenian" },
-                { "bn", "Bangla" },
-                { "bg", "Bulgarian" },
-                { "zh-Hans", "ChineseSimplified" },
-                { "hr", "Croatian" },
-                { "cs", "Czek" },
-                { "da", "Danish" },
-                { "nl", "Dutch" },
-                { "fil", "Filipino" },
-                { "fi", "Finnish" },
-                { "fr", "French" },
-                { "de", "German" },
-                { "el", "Greek" },
-                { "he", "Hebrew" },
-                { "hi", "Hindi" },
-                { "hu", "Hungarian" },
-                { "id", "Indonesian" },
-                { "ga", "Irish" },
-                { "it", "Italian" },
-                { "ja", "Japanese" },
-                { "ko", "Korean" },
-                { "ms", "Malay" },
-                { "my", "Myanmar" },
-                { "ne", "Nepali" },
-                { "nb", "Norwegian" },
-                { "fa", "Persian" },
-                { "pl", "Polish" },
-                { "pt-pt", "Portuguese" },
-                { "ro", "Romanian" },
-                { "ru", "Russian" },
-                { "es", "Spanish" },
-                { "sv", "Swedish" },
-                { "th", "Thai" },
-                { "tr", "Turkish" },
-                { "uk", "Ukrainian" },
-                { "vi", "Vietnamese" }
-            };
+            var section = (Hashtable)ConfigurationManager.GetSection("CodeLanguageMapping");
+
+            Dictionary<string, string> codeLanguageMap = section.Cast<DictionaryEntry>().ToDictionary(d => (string)d.Key, d => (string)d.Value);
+
+            return codeLanguageMap;
+
+            //return new Dictionary<string, string>() {
+            //    {"af", "Afrikaans" },
+            //    {"sq", "Albanian" },
+            //    {"ar", "Arabic" },
+            //    {"hy", "Armenian" },
+            //    //{ "", "" },
+                //{ "", "" },
+                
+            //};
         }
 
         private static async Task TranslateSubtitle(string fileName, string textToTranslate, KeyValuePair<string, string> languageSetting)
@@ -89,9 +64,9 @@ namespace YoutubeSubtitlesGenerator
             string languageCode = languageSetting.Key.ToString();
             string languageValue = languageSetting.Value.ToString();
 
-            const string videoLanguage = "en";
+            string defaultVideoLanguage = ConfigurationManager.AppSettings["defaultVideoLanguage"];
 
-            string route = $"/translate?api-version=3.0&from={videoLanguage}&to={languageCode}";
+            string route = $"/translate?api-version=3.0&from={defaultVideoLanguage}&to={languageCode}";
 
             using (var client = new HttpClient())
             using (var request = new HttpRequestMessage())
@@ -117,9 +92,12 @@ namespace YoutubeSubtitlesGenerator
             string convertedOutput = jsonResult.First.translations.First.text;
             Console.WriteLine(convertedOutput);
 
-            string outputDirectory = @"C:\Users\niles\Downloads\TranslatedOutput";
+            //string outputDirectory = @"C:\Users\niles\Downloads\TranslatedOutput";
 
-            File.WriteAllText($@"{outputDirectory}\{fileName}-{languageValue}.vtt", convertedOutput);
+            string destinationFolder = ConfigurationManager.AppSettings["destinationFolder"];
+            Console.WriteLine($"Destination folder : {destinationFolder}");
+
+            File.WriteAllText($@"{destinationFolder}\{fileName}-{languageValue}.vtt", convertedOutput);
             Console.WriteLine();
         }
 
@@ -128,11 +106,14 @@ namespace YoutubeSubtitlesGenerator
             string apiKey = Environment.GetEnvironmentVariable("TranslatorAPIKey", EnvironmentVariableTarget.Machine);
             Console.WriteLine($"API Key exists : {!string.IsNullOrEmpty(apiKey)}");
 
+            string translatorRegion = ConfigurationManager.AppSettings["translatorRegion"];
+            Console.WriteLine($"Translator region : {translatorRegion}");
+
             request.Method = HttpMethod.Post;
             request.RequestUri = new Uri(endpoint + route);
             request.Content = new StringContent(textToTranslate, Encoding.UTF8, "application/json");
             request.Headers.Add("Ocp-Apim-Subscription-Key", apiKey);
-            request.Headers.Add("Ocp-Apim-Subscription-Region", region);
+            request.Headers.Add("Ocp-Apim-Subscription-Region", translatorRegion);
         }
     }
 }
