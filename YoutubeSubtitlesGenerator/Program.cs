@@ -13,9 +13,6 @@ namespace YoutubeSubtitlesGenerator
 {
     class Program
     {
-        private static readonly string endpoint = "https://api.cognitive.microsofttranslator.com";
-        
-
         static async Task Main(string[] args)
         {
             //string textToTranslate = "I would really like to drive your car around the block a few times!";
@@ -48,15 +45,6 @@ namespace YoutubeSubtitlesGenerator
 
             return codeLanguageMap;
 
-            //return new Dictionary<string, string>() {
-            //    {"af", "Afrikaans" },
-            //    {"sq", "Albanian" },
-            //    {"ar", "Arabic" },
-            //    {"hy", "Armenian" },
-            //    //{ "", "" },
-                //{ "", "" },
-                
-            //};
         }
 
         private static async Task TranslateSubtitle(string fileName, string textToTranslate, KeyValuePair<string, string> languageSetting)
@@ -104,14 +92,16 @@ namespace YoutubeSubtitlesGenerator
         private static void BuildRequest(string textToTranslate, string route, HttpRequestMessage request)
         {
             string apiKey = Environment.GetEnvironmentVariable("TranslatorAPIKey", EnvironmentVariableTarget.Machine);
-            Console.WriteLine($"API Key exists : {!string.IsNullOrEmpty(apiKey)}");
 
             string translatorRegion = ConfigurationManager.AppSettings["translatorRegion"];
-            Console.WriteLine($"Translator region : {translatorRegion}");
+            string translatorEndpoint = ConfigurationManager.AppSettings["translatorEndpoint"];
+            
 
             request.Method = HttpMethod.Post;
-            request.RequestUri = new Uri(endpoint + route);
+            request.RequestUri = new Uri(translatorEndpoint + route);
+            
             request.Content = new StringContent(textToTranslate, Encoding.UTF8, "application/json");
+            
             request.Headers.Add("Ocp-Apim-Subscription-Key", apiKey);
             request.Headers.Add("Ocp-Apim-Subscription-Region", translatorRegion);
         }
