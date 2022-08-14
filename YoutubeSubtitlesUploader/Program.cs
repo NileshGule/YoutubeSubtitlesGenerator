@@ -11,31 +11,28 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        //Console.WriteLine("YouTube Data API: My Uploads");
-        //Console.WriteLine("============================");
-
-        //try
-        //{
-        //     Run().Wait();
-        //}
-        //catch (AggregateException ex)
-        //{
-        //    foreach (var e in ex.InnerExceptions)
-        //    {
-        //        Console.WriteLine("Error: " + e.Message);
-        //    }
-        //}
-        string videoId = "TV7tHwXIuAw";
-        string fileName = "testWithRBHeadset";
+        string videoId;
+        string fileName;
         string languageCode;
         string languageName;
-        
-        //string subtitleFileName = @"C:\Users\niles\Downloads\TranslatedOutput\testWithRBHeadset-Hindi.vtt";
+
+        if (args.Length != 2)
+        {
+            Console.WriteLine($"Missing input parameters. {Environment.NewLine} Cannot continue without the Youtube video ID and input file.");
+            return;
+        }
+        else
+        {
+            videoId = args[0];
+
+            fileName = args[1];
+            Console.WriteLine($"Input file name : {fileName}");
+        }
 
         Dictionary<string, string> languageCodeMap = GetLanguageCodeMapping();
 
         string translationFolder = ConfigurationManager.AppSettings["translationFolder"];
-        Console.WriteLine($"Destination folder : {translationFolder}");
+        Console.WriteLine($"Directory with translated files: {translationFolder}");
 
         foreach (KeyValuePair<string, string> languageSetting in languageCodeMap)
         {
@@ -44,7 +41,7 @@ class Program
 
             string translatedFileName = $@"{translationFolder}\{fileName}-{languageName}.vtt";
 
-            await addVideoCaption(videoId, languageCode, languageName, translatedFileName);
+            await AddVideoCaption(videoId, languageCode, languageName, translatedFileName);
         }
 
         Console.WriteLine("Press any key to continue...");
@@ -60,69 +57,7 @@ class Program
         return codeLanguageMap;
 
     }
-
-    private static async Task Run()
-    {
-        UserCredential credential;
-        using (var stream = new FileStream("client_secrets.json", FileMode.Open, FileAccess.Read))
-        {
-            credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                GoogleClientSecrets.FromStream(stream).Secrets,
-                // This OAuth 2.0 access scope allows for read-only access to the authenticated 
-                // user's account, but not other types of account access.
-                new[] { YouTubeService.Scope.YoutubeReadonly },
-                "user",
-                CancellationToken.None,
-                //new FileDataStore(this.GetType().ToString())
-                new FileDataStore("YoutubeSubtitleUploader")
-            );
-        }
-
-        var youtubeService = new YouTubeService(new BaseClientService.Initializer()
-        {
-            HttpClientInitializer = credential,
-            //ApplicationName = this.GetType().ToString()
-            ApplicationName = "YoutubeSubtitleUploader"
-        });
-
-        var channelsListRequest = youtubeService.Channels.List("contentDetails");
-        channelsListRequest.Mine = true;
-
-        // Retrieve the contentDetails part of the channel resource for the authenticated user's channel.
-        var channelsListResponse = await channelsListRequest.ExecuteAsync();
-
-        foreach (var channel in channelsListResponse.Items)
-        {
-            // From the API response, extract the playlist ID that identifies the list
-            // of videos uploaded to the authenticated user's channel.
-            var uploadsListId = channel.ContentDetails.RelatedPlaylists.Uploads;
-
-            Console.WriteLine("Videos in list {0}", uploadsListId);
-
-            var nextPageToken = "";
-            while (nextPageToken != null)
-            {
-                var playlistItemsListRequest = youtubeService.PlaylistItems.List("snippet");
-                playlistItemsListRequest.PlaylistId = uploadsListId;
-                playlistItemsListRequest.MaxResults = 50;
-                playlistItemsListRequest.PageToken = nextPageToken;
-
-                // Retrieve the list of videos uploaded to the authenticated user's channel.
-                var playlistItemsListResponse = await playlistItemsListRequest.ExecuteAsync();
-
-                foreach (var playlistItem in playlistItemsListResponse.Items)
-                {
-                    // Print information about each video.
-                    Console.WriteLine("{0} ({1})", playlistItem.Snippet.Title, playlistItem.Snippet.ResourceId.VideoId);
-                }
-
-                nextPageToken = playlistItemsListResponse.NextPageToken;
-            }
-
-        }
-    }
-
-    static async Task addVideoCaption(string videoID, string languageCode, string languageName, string subtitleFileName) //pass your video id here..
+    static async Task AddVideoCaption(string videoID, string languageCode, string languageName, string subtitleFileName) //pass your video id here..
     {
         UserCredential credential;
         
@@ -134,14 +69,12 @@ class Program
                 new[] { YouTubeService.Scope.YoutubeForceSsl, YouTubeService.Scope.Youtube, YouTubeService.Scope.Youtubepartner },
                 "user",
                 CancellationToken.None
-            //new FileDataStore(this.GetType().ToString())
             );
         }
         //creates the service...
-        var youtubeService = new Google.Apis.YouTube.v3.YouTubeService(new BaseClientService.Initializer()
+        var youtubeService = new YouTubeService(new BaseClientService.Initializer()
         {
             HttpClientInitializer = credential,
-            //ApplicationName = this.GetType().ToString(),
             ApplicationName = "YoutubeSubtitleUploader"
         });
 
@@ -152,7 +85,7 @@ class Program
             languageCode = "pt-PT";
 
         //create a CaptionSnippet object...
-        CaptionSnippet capSnippet = new CaptionSnippet
+        CaptionSnippet capSnippet = new()
         {
             Language = languageCode,
             Name = languageName,
@@ -161,7 +94,7 @@ class Program
         };
 
         //create new caption object and set the completed snippet
-        Caption caption = new Caption()
+        Caption caption = new()
         {
             Snippet = capSnippet
         };
