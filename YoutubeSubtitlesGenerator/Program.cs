@@ -17,24 +17,19 @@ namespace YoutubeSubtitlesGenerator
         {
             // string textToTranslate = "I would really like to drive your car around the block a few times!";
             string textToTranslate;
-
-            Dictionary<string, string> languageCodeMap = GetLanguageCodeMapping();
-
-            //string textToTranslate = File.ReadAllText(@"C:\Users\niles\Downloads\captions.vtt").Replace("&nbsp;", "");
-
             string inputFileName;
 
-            if (args.Length > 0)
+            if (args.Length == 0)
+            {
+                Console.WriteLine($"Missing input file name. {Environment.NewLine} Cannot continue without the input file.");
+                return;
+            }
+            else
             {
                 inputFileName = args[0];
                 Console.WriteLine($"Input file name : {inputFileName}");
 
                 textToTranslate = File.ReadAllText($@"{inputFileName}").Replace("&nbsp;", "");
-            } 
-            else
-            {
-                Console.WriteLine($"Missing input file name. {Environment.NewLine} Cannot continue without the input file.");
-                return;
             }
 
             string fileName = Path.GetFileNameWithoutExtension($@"{inputFileName}");
@@ -43,6 +38,8 @@ namespace YoutubeSubtitlesGenerator
             var requestBody = JsonConvert.SerializeObject(body);
 
             Console.OutputEncoding = Encoding.Unicode;
+
+            Dictionary<string, string> languageCodeMap = GetLanguageCodeMapping();
 
             foreach (KeyValuePair<string, string> languageSetting in languageCodeMap)
             {
