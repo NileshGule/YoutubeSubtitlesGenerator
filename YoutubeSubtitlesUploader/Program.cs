@@ -145,32 +145,48 @@ class Program
             ApplicationName = "YoutubeSubtitleUploader"
         });
 
+        // updated mismatched language codes between Microsoft Translator and Youtube API
+        if (languageCode == "zh-Hans")
+            languageCode = "zh-CN";
+        if (languageCode == "pt-pt")
+            languageCode = "pt-PT";
+
         //create a CaptionSnippet object...
-        CaptionSnippet capSnippet = new CaptionSnippet();
-        capSnippet.Language = languageCode;
-        //capSnippet.Name = videoID + "_Caption";
-        capSnippet.Name = languageName;
-        capSnippet.VideoId = videoID;
-        capSnippet.IsDraft = false;
-
-        //create new caption object
-        Caption caption = new Caption();
-
-        //set the completed snippet to the object now...
-        caption.Snippet = capSnippet;
-
-        //here we read our .srt which contains our subtitles/captions...
-        using (var fileStream = new FileStream($@"{subtitleFileName}", FileMode.Open))
+        CaptionSnippet capSnippet = new CaptionSnippet
         {
-            //create the request now and insert our params...
-            var captionRequest = youtubeService.Captions.Insert(caption, "snippet", fileStream, "application/atom+xml");
+            Language = languageCode,
+            Name = languageName,
+            VideoId = videoID,
+            IsDraft = false
+        };
 
-            //finally upload the request... and wait.
-            await captionRequest.UploadAsync();
+        //create new caption object and set the completed snippet
+        Caption caption = new Caption()
+        {
+            Snippet = capSnippet
+        };
+              
+
+        try
+        {
+            //here we read our .srt which contains our subtitles/captions...
+            using (var fileStream = new FileStream($@"{subtitleFileName}", FileMode.Open))
+            {
+                //create the request now and insert our params...
+                var captionRequest = youtubeService.Captions.Insert(caption, "snippet", fileStream, "application/atom+xml");
+
+                //finally upload the request... and wait.
+                await captionRequest.UploadAsync();
+
+                Console.WriteLine();
+                Console.WriteLine($"Uploaded {subtitleFileName}, in {languageName}");
+            }
         }
-
-        Console.WriteLine();
-        Console.WriteLine($"Uploaded {subtitleFileName}, in {languageName}");
+        catch
+        {
+            Console.WriteLine();
+            Console.WriteLine($"There was some problem Uploading {subtitleFileName}, in {languageName}");
+        }
 
     }
     

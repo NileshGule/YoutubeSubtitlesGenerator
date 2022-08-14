@@ -64,3 +64,7 @@ For the complete list of [languages supported](https://docs.microsoft.com/en-ca/
 | tr            | Turkish       |
 | uk            | Ukrainian     |
 | vi            | Vietnamese    |
+
+## References
+
+- [Youtube Data API v3 Client library for .Net](https://developers.google.com/api-client-library/dotnet/apis/youtube/v3)
