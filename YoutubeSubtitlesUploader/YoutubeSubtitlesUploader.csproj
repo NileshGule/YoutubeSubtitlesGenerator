@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.57.0.2756" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>

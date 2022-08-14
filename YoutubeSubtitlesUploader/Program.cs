@@ -4,6 +4,8 @@ using Google.Apis.Util.Store;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 using System;
+using System.Collections;
+using System.Configuration;
 
 class Program
 {
@@ -23,11 +25,40 @@ class Program
         //        Console.WriteLine("Error: " + e.Message);
         //    }
         //}
+        string videoId = "TV7tHwXIuAw";
+        string fileName = "testWithRBHeadset";
+        string languageCode;
+        string languageName;
+        
+        //string subtitleFileName = @"C:\Users\niles\Downloads\TranslatedOutput\testWithRBHeadset-Hindi.vtt";
 
-        addVideoCaption("TV7tHwXIuAw");
+        Dictionary<string, string> languageCodeMap = GetLanguageCodeMapping();
+
+        string translationFolder = ConfigurationManager.AppSettings["translationFolder"];
+        Console.WriteLine($"Destination folder : {translationFolder}");
+
+        foreach (KeyValuePair<string, string> languageSetting in languageCodeMap)
+        {
+            languageCode = languageSetting.Key;
+            languageName = languageSetting.Value;
+
+            string translatedFileName = $@"{translationFolder}\{fileName}-{languageName}.vtt";
+
+            await addVideoCaption(videoId, languageCode, languageName, translatedFileName);
+        }
 
         Console.WriteLine("Press any key to continue...");
         Console.ReadKey();
+    }
+
+    private static Dictionary<string, string> GetLanguageCodeMapping()
+    {
+        var section = (Hashtable)ConfigurationManager.GetSection("CodeLanguageMapping");
+
+        Dictionary<string, string> codeLanguageMap = section.Cast<DictionaryEntry>().ToDictionary(d => (string)d.Key, d => (string)d.Value);
+
+        return codeLanguageMap;
+
     }
 
     private static async Task Run()
@@ -91,7 +122,7 @@ class Program
         }
     }
 
-    static async Task addVideoCaption(string videoID) //pass your video id here..
+    static async Task addVideoCaption(string videoID, string languageCode, string languageName, string subtitleFileName) //pass your video id here..
     {
         UserCredential credential;
         
@@ -116,9 +147,9 @@ class Program
 
         //create a CaptionSnippet object...
         CaptionSnippet capSnippet = new CaptionSnippet();
-        capSnippet.Language = "hi";
+        capSnippet.Language = languageCode;
         //capSnippet.Name = videoID + "_Caption";
-        capSnippet.Name = "Hindi";
+        capSnippet.Name = languageName;
         capSnippet.VideoId = videoID;
         capSnippet.IsDraft = false;
 
@@ -129,7 +160,7 @@ class Program
         caption.Snippet = capSnippet;
 
         //here we read our .srt which contains our subtitles/captions...
-        using (var fileStream = new FileStream(@"C:\Users\niles\Downloads\TranslatedOutput\testWithRBHeadset-Hindi.vtt", FileMode.Open))
+        using (var fileStream = new FileStream($@"{subtitleFileName}", FileMode.Open))
         {
             //create the request now and insert our params...
             var captionRequest = youtubeService.Captions.Insert(caption, "snippet", fileStream, "application/atom+xml");
@@ -137,6 +168,9 @@ class Program
             //finally upload the request... and wait.
             await captionRequest.UploadAsync();
         }
+
+        Console.WriteLine();
+        Console.WriteLine($"Uploaded {subtitleFileName}, in {languageName}");
 
     }
     
