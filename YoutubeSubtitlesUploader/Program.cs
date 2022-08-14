@@ -9,20 +9,22 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        Console.WriteLine("YouTube Data API: My Uploads");
-        Console.WriteLine("============================");
+        //Console.WriteLine("YouTube Data API: My Uploads");
+        //Console.WriteLine("============================");
 
-        try
-        {
-             Run().Wait();
-        }
-        catch (AggregateException ex)
-        {
-            foreach (var e in ex.InnerExceptions)
-            {
-                Console.WriteLine("Error: " + e.Message);
-            }
-        }
+        //try
+        //{
+        //     Run().Wait();
+        //}
+        //catch (AggregateException ex)
+        //{
+        //    foreach (var e in ex.InnerExceptions)
+        //    {
+        //        Console.WriteLine("Error: " + e.Message);
+        //    }
+        //}
+
+        addVideoCaption("TV7tHwXIuAw");
 
         Console.WriteLine("Press any key to continue...");
         Console.ReadKey();
@@ -34,20 +36,22 @@ class Program
         using (var stream = new FileStream("client_secrets.json", FileMode.Open, FileAccess.Read))
         {
             credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                GoogleClientSecrets.Load(stream).Secrets,
+                GoogleClientSecrets.FromStream(stream).Secrets,
                 // This OAuth 2.0 access scope allows for read-only access to the authenticated 
                 // user's account, but not other types of account access.
                 new[] { YouTubeService.Scope.YoutubeReadonly },
                 "user",
                 CancellationToken.None,
-                new FileDataStore(this.GetType().ToString())
+                //new FileDataStore(this.GetType().ToString())
+                new FileDataStore("YoutubeSubtitleUploader")
             );
         }
 
         var youtubeService = new YouTubeService(new BaseClientService.Initializer()
         {
             HttpClientInitializer = credential,
-            ApplicationName = this.GetType().ToString()
+            //ApplicationName = this.GetType().ToString()
+            ApplicationName = "YoutubeSubtitleUploader"
         });
 
         var channelsListRequest = youtubeService.Channels.List("contentDetails");
@@ -87,51 +91,54 @@ class Program
         }
     }
 
-    async Task addVideoCaption(string videoID) //pass your video id here..
+    static async Task addVideoCaption(string videoID) //pass your video id here..
+    {
+        UserCredential credential;
+        
+        //you should go out and get a json file that keeps your information... You can get that from the developers console...
+        using (var stream = new FileStream("client_secrets.json", FileMode.Open, FileAccess.Read))
         {
-            UserCredential credential;
-            //you should go out and get a json file that keeps your information... You can get that from the developers console...
-            using (var stream = new FileStream("client_secrets.json", FileMode.Open, FileAccess.Read))
-            {
-                credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                    GoogleClientSecrets.Load(stream).Secrets,
-                    new[] { YouTubeService.Scope.YoutubeForceSsl, YouTubeService.Scope.Youtube, YouTubeService.Scope.Youtubepartner },
-                    "ACCOUNT NAME HERE",
-                    CancellationToken.None,
-                    new FileDataStore(this.GetType().ToString())
-                );
-            }
-            //creates the service...
-            var youtubeService = new Google.Apis.YouTube.v3.YouTubeService(new BaseClientService.Initializer()
-            {
-                HttpClientInitializer = credential,
-                ApplicationName = this.GetType().ToString(),
-            });
-
-            //create a CaptionSnippet object...
-            CaptionSnippet capSnippet = new CaptionSnippet();
-            capSnippet.Language = "en";
-            capSnippet.Name = videoID + "_Caption";
-            capSnippet.VideoId = videoID;
-            capSnippet.IsDraft = false;
-
-            //create new caption object
-            Caption caption = new Caption();
-
-            //set the completed snippet to the object now...
-            caption.Snippet = capSnippet;
-
-            //here we read our .srt which contains our subtitles/captions...
-            using (var fileStream = new FileStream("filepathhere", FileMode.Open))
-            {
-                //create the request now and insert our params...
-                var captionRequest = youtubeService.Captions.Insert(caption, "snippet", fileStream, "application/atom+xml");
-
-                //finally upload the request... and wait.
-                await captionRequest.UploadAsync();
-            }
-
+            credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+                GoogleClientSecrets.FromStream(stream).Secrets,
+                new[] { YouTubeService.Scope.YoutubeForceSsl, YouTubeService.Scope.Youtube, YouTubeService.Scope.Youtubepartner },
+                "user",
+                CancellationToken.None
+            //new FileDataStore(this.GetType().ToString())
+            );
         }
+        //creates the service...
+        var youtubeService = new Google.Apis.YouTube.v3.YouTubeService(new BaseClientService.Initializer()
+        {
+            HttpClientInitializer = credential,
+            //ApplicationName = this.GetType().ToString(),
+            ApplicationName = "YoutubeSubtitleUploader"
+        });
+
+        //create a CaptionSnippet object...
+        CaptionSnippet capSnippet = new CaptionSnippet();
+        capSnippet.Language = "hi";
+        //capSnippet.Name = videoID + "_Caption";
+        capSnippet.Name = "Hindi";
+        capSnippet.VideoId = videoID;
+        capSnippet.IsDraft = false;
+
+        //create new caption object
+        Caption caption = new Caption();
+
+        //set the completed snippet to the object now...
+        caption.Snippet = capSnippet;
+
+        //here we read our .srt which contains our subtitles/captions...
+        using (var fileStream = new FileStream(@"C:\Users\niles\Downloads\TranslatedOutput\testWithRBHeadset-Hindi.vtt", FileMode.Open))
+        {
+            //create the request now and insert our params...
+            var captionRequest = youtubeService.Captions.Insert(caption, "snippet", fileStream, "application/atom+xml");
+
+            //finally upload the request... and wait.
+            await captionRequest.UploadAsync();
+        }
+
+    }
     
 }
 
