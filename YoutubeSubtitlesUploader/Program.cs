@@ -1,11 +1,10 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
-using Google.Apis.Util.Store;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
-using System;
 using System.Collections;
 using System.Configuration;
+using Google.Apis.Upload;
 
 class Program
 {
@@ -60,7 +59,7 @@ class Program
     static async Task AddVideoCaption(string videoID, string languageCode, string languageName, string subtitleFileName) //pass your video id here..
     {
         UserCredential credential;
-        
+
         //you should go out and get a json file that keeps your information... You can get that from the developers console...
         using (var stream = new FileStream("client_secrets.json", FileMode.Open, FileAccess.Read))
         {
@@ -98,31 +97,44 @@ class Program
         {
             Snippet = capSnippet
         };
-              
 
-        try
+
+
+        //here we read our .srt which contains our subtitles/captions...
+        using (var fileStream = new FileStream($@"{subtitleFileName}", FileMode.Open))
         {
-            //here we read our .srt which contains our subtitles/captions...
-            using (var fileStream = new FileStream($@"{subtitleFileName}", FileMode.Open))
-            {
-                //create the request now and insert our params...
-                var captionRequest = youtubeService.Captions.Insert(caption, "snippet", fileStream, "application/atom+xml");
+            //create the request now and insert our params...
+            var captionRequest = youtubeService.Captions.Insert(caption, "snippet", fileStream, "application/atom+xml");
 
-                //finally upload the request... and wait.
-                await captionRequest.UploadAsync();
+            captionRequest.ProgressChanged += CaptionRequest_ProgressChanged;
+            captionRequest.ResponseReceived += CaptionRequest_ResponseReceived;
 
-                Console.WriteLine();
-                Console.WriteLine($"Uploaded {subtitleFileName}, in {languageName}");
-            }
-        }
-        catch
-        {
+            //finally upload the request... and wait.
+            await captionRequest.UploadAsync();
+
             Console.WriteLine();
-            Console.WriteLine($"There was some problem Uploading {subtitleFileName}, in {languageName}");
+            Console.WriteLine($"Uploaded {subtitleFileName}, in {languageName}");
         }
+
 
     }
-    
+
+    private static void CaptionRequest_ResponseReceived(Caption caption)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"{caption.Snippet.Language} caption status = {caption.Snippet.Status}");
+    }
+
+    private static void CaptionRequest_ProgressChanged(IUploadProgress progress)
+    {
+        switch (progress.Status)
+        {
+            case UploadStatus.Failed:
+                Console.WriteLine();
+                Console.WriteLine($"An error occured while uploading the subtitles. {Environment.NewLine}{progress.Exception}");
+                break;
+        }
+    }
 }
 
        
