@@ -97,7 +97,11 @@ namespace YoutubeSubtitlesGenerator
             string destinationFolder = ConfigurationManager.AppSettings["destinationFolder"];
             Console.WriteLine($"Destination folder : {destinationFolder}");
 
-            File.WriteAllText($@"{destinationFolder}\{fileName}-{languageValue}.vtt", convertedOutput);
+            string webVttPrefix = string.Concat("WEBVTT", Environment.NewLine, Environment.NewLine);
+
+            string finalText = string.Concat(webVttPrefix, convertedOutput);
+
+            File.WriteAllText($@"{destinationFolder}\{fileName}-{languageValue}.vtt", finalText);
             Console.WriteLine();
         }
 
