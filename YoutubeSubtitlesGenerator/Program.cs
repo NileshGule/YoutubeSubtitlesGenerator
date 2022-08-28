@@ -48,8 +48,8 @@ namespace YoutubeSubtitlesGenerator
 
             foreach (KeyValuePair<string, string> languageSetting in languageCodeMap)
             {
-                // await TranslateSubtitle(fileName, requestBody, languageSetting)
-                //     .ConfigureAwait(false);
+                await TranslateSubtitle(fileName, requestBody, languageSetting)
+                    .ConfigureAwait(false);
             }
 
         }
@@ -95,7 +95,7 @@ namespace YoutubeSubtitlesGenerator
             Console.WriteLine($"Writing {languageValue} converted output");
 
             string convertedOutput = jsonResult.First.translations.First.text;
-            Console.WriteLine(convertedOutput);
+            // Console.WriteLine(convertedOutput);
 
             //string outputDirectory = @"C:\Users\niles\Downloads\TranslatedOutput";
 
@@ -107,6 +107,7 @@ namespace YoutubeSubtitlesGenerator
             string finalText = string.Concat(webVttPrefix, convertedOutput);
 
             File.WriteAllText($@"{destinationFolder}\{fileName}-{languageValue}.vtt", finalText);
+            Console.WriteLine($"Translated subtitles for {languageValue} saved successfully");
             Console.WriteLine();
         }
 
