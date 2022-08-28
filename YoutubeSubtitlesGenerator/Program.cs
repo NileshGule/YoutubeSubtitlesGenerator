@@ -29,7 +29,12 @@ namespace YoutubeSubtitlesGenerator
                 inputFileName = args[0];
                 Console.WriteLine($"Input file name : {inputFileName}");
 
+                // remove WEBVTT, kind: captions Language: en lines from original file by skipping first 4 lines
+                File.WriteAllLines(inputFileName, File.ReadLines(inputFileName).Skip(4).ToList());
+
                 textToTranslate = File.ReadAllText($@"{inputFileName}").Replace("&nbsp;", "");
+
+                //Console.WriteLine($"Text to translate : {Environment.NewLine}{textToTranslate}");
             }
 
             string fileName = Path.GetFileNameWithoutExtension($@"{inputFileName}");
@@ -43,8 +48,8 @@ namespace YoutubeSubtitlesGenerator
 
             foreach (KeyValuePair<string, string> languageSetting in languageCodeMap)
             {
-                await TranslateSubtitle(fileName, requestBody, languageSetting)
-                    .ConfigureAwait(false);
+                // await TranslateSubtitle(fileName, requestBody, languageSetting)
+                //     .ConfigureAwait(false);
             }
 
         }
