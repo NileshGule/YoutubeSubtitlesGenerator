@@ -68,3 +68,9 @@ For the complete list of [languages supported](https://docs.microsoft.com/en-ca/
 ## References
 
 - [Youtube Data API v3 Client library for .Net](https://developers.google.com/api-client-library/dotnet/apis/youtube/v3)
+
+## Youtube videos
+
+[How to generate Youtube subtitles in multiple languages using Microsoft Translator](https://youtu.be/LJadZFQiHCI)
+
+[![How to generate Youtube subtitles in multiple languages using Microsoft Translator](/images/generate-Youtube-Subtitles.png)](https://youtu.be/LJadZFQiHCI)
