@@ -65,6 +65,11 @@ For the complete list of [languages supported](https://docs.microsoft.com/en-ca/
 | uk            | Ukrainian     |
 | vi            | Vietnamese    |
 
+## Create project using YouTube Data API
+Follow the instructions in the [YouTube Data API](https://developers.google.com/youtube/v3/getting-started) and create a project in the console
+
+Watch the two YouTUbe videos listed below to know how to generate and upload subtitles in multiple languages.
+
 ## References
 
 - [Youtube Data API v3 Client library for .Net](https://developers.google.com/api-client-library/dotnet/apis/youtube/v3)
