@@ -1,7 +1,7 @@
 # Youtube Subtitles generator
 
 This repo contains the source code for generating the Youtube subtitles in multiple languages. The input file is a .vtt file. This is generated from Youtube video subtitle.
-The default language is English. This input file is converted to multiple languages uses Azure Congnitive service named Translator.
+The default language is English. This input file is converted to multiple languages uses Azure Cognitive service named Translator.
 
 ## Prerequisites
 
