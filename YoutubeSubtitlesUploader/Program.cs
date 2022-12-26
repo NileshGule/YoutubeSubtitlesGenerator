@@ -33,15 +33,59 @@ class Program
         string translationFolder = ConfigurationManager.AppSettings["translationFolder"];
         Console.WriteLine($"Directory with translated files: {translationFolder}");
 
-        foreach (KeyValuePair<string, string> languageSetting in languageCodeMap)
+        YouTubeService youtubeService = await CreateYouTubeService();
+
+        var searchRequest = youtubeService.Videos.List("snippet");
+        searchRequest.Id = videoId;
+        var searchResponse = await searchRequest.ExecuteAsync();
+
+        Console.WriteLine($"Total videos found: {searchResponse.Items.Count}");
+
+        var youTubeVideo = searchResponse.Items.FirstOrDefault();
+
+        if (youTubeVideo != null)
         {
-            languageCode = languageSetting.Key;
-            languageName = languageSetting.Value;
+            Console.WriteLine($"VideoId : {youTubeVideo.Id}");
+            Console.WriteLine($"Description : {youTubeVideo.Snippet.Description}");
+            Console.WriteLine($"Title : {youTubeVideo.Snippet.Title}");
+            Console.WriteLine($"ChannelTitle : {youTubeVideo.Snippet.ChannelTitle}");
+        }
+
+        // Get the list of language codes for subtitles
+        //https://googleapis.dev/dotnet/Google.Apis.YouTube.v3/latest/api/Google.Apis.YouTube.v3.Data.VideoLocalization.html
+        var currentSubtitles = searchResponse.Items
+          .Select(video => video.Snippet.Localized.Title) 
+          .ToList();
+
+        currentSubtitles.ForEach(subtitle => Console.WriteLine($"Current subtitle language: {subtitle}"));
+
+        // Get the list of language codes
+        var translatedSubtitles = languageCodeMap.Keys.ToList();
+
+        var missingSubtitles = translatedSubtitles.Except(currentSubtitles);
+
+        missingSubtitles.ToList().ForEach(subtitle => Console.WriteLine($"Missing subtitle language: {subtitle}"));
+
+        // Add missing subtitles
+        foreach (var subtitle in missingSubtitles)
+        {
+            languageCode = subtitle;
+            languageName = languageCodeMap[subtitle];
 
             string translatedFileName = $@"{translationFolder}\{fileName}-{languageName}.vtt";
 
-            await AddVideoCaption(videoId, languageCode, languageName, translatedFileName);
+            // await AddVideoCaption(videoId, languageCode, languageName, translatedFileName);
         }
+
+        // foreach (KeyValuePair<string, string> languageSetting in languageCodeMap)
+        // {
+        //     languageCode = languageSetting.Key;
+        //     languageName = languageSetting.Value;
+
+        //     string translatedFileName = $@"{translationFolder}\{fileName}-{languageName}.vtt";
+
+        //     await AddVideoCaption(videoId, languageCode, languageName, translatedFileName);
+        // }
 
         Console.WriteLine("Press any key to continue...");
         Console.ReadKey();
@@ -58,24 +102,7 @@ class Program
     }
     static async Task AddVideoCaption(string videoID, string languageCode, string languageName, string subtitleFileName) //pass your video id here..
     {
-        UserCredential credential;
-
-        //you should go out and get a json file that keeps your information... You can get that from the developers console...
-        using (var stream = new FileStream("client_secrets.json", FileMode.Open, FileAccess.Read))
-        {
-            credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                GoogleClientSecrets.FromStream(stream).Secrets,
-                new[] { YouTubeService.Scope.YoutubeForceSsl, YouTubeService.Scope.Youtube, YouTubeService.Scope.Youtubepartner },
-                "user",
-                CancellationToken.None
-            );
-        }
-        //creates the service...
-        var youtubeService = new YouTubeService(new BaseClientService.Initializer()
-        {
-            HttpClientInitializer = credential,
-            ApplicationName = "YoutubeSubtitleUploader"
-        });
+        YouTubeService youtubeService = await CreateYouTubeService();
 
         // updated mismatched language codes between Microsoft Translator and Youtube API
         if (languageCode == "zh-Hans")
@@ -110,13 +137,37 @@ class Program
             captionRequest.ResponseReceived += CaptionRequest_ResponseReceived;
 
             //finally upload the request... and wait.
-            await captionRequest.UploadAsync();
+           // await captionRequest.UploadAsync();
 
             Console.WriteLine();
             Console.WriteLine($"Uploaded {subtitleFileName}, in {languageName}");
         }
 
 
+    }
+
+    private static async Task<YouTubeService> CreateYouTubeService()
+    {
+        UserCredential credential;
+
+        //you should go out and get a json file that keeps your information... You can get that from the developers console...
+        using (var stream = new FileStream("client_secrets.json", FileMode.Open, FileAccess.Read))
+        {
+            credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+                GoogleClientSecrets.FromStream(stream).Secrets,
+                new[] { YouTubeService.Scope.YoutubeForceSsl, YouTubeService.Scope.Youtube, YouTubeService.Scope.Youtubepartner },
+                "user",
+                CancellationToken.None
+            );
+        }
+        //creates the service...
+        var youtubeService = new YouTubeService(new BaseClientService.Initializer()
+        {
+            HttpClientInitializer = credential,
+            ApplicationName = "YoutubeSubtitleUploader"
+        });
+
+        return youtubeService;
     }
 
     private static void CaptionRequest_ResponseReceived(Caption caption)
