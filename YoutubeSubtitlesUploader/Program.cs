@@ -35,8 +35,6 @@ class Program
 
         YouTubeService youtubeService = await CreateYouTubeService();
 
-        
-
         var searchRequest = youtubeService.Videos.List("snippet");
         searchRequest.Id = videoId;
         var searchResponse = await searchRequest.ExecuteAsync();
@@ -47,10 +45,10 @@ class Program
 
         if (youTubeVideo != null)
         {
-            var captionListResponse = youtubeService.Captions.List("id,snippet", videoId).Execute();
+            var captions = youtubeService.Captions.List("id,snippet", videoId).Execute();
             
             var currentSubtitles =
-                captionListResponse.Items.Select(c => c.Snippet.Language.ToLower())
+                captions.Items.Select(c => c.Snippet.Language.ToLower())
                                          .ToList();
 
             currentSubtitles.ForEach(subtitle => Console.WriteLine($"Subtitle language: {subtitle}"));
@@ -62,8 +60,6 @@ class Program
 
             var missingSubtitles = translatedSubtitles.Except(currentSubtitles).ToList();
 
-            missingSubtitles.ForEach(subtitle => Console.WriteLine($"Missing subtitle language: {subtitle}"));
-
             Console.WriteLine();
             Console.WriteLine($"Missing subtitles count: {missingSubtitles.Count}");
 
@@ -74,6 +70,8 @@ class Program
                 languageName = languageCodeMap[subtitle];
 
                 string translatedFileName = $@"{translationFolder}\{fileName}-{languageName}.vtt";
+
+                Console.WriteLine($"Uploading {translatedFileName} for language {languageName}");
 
                 await AddVideoCaption(videoId, languageCode, languageName, translatedFileName);
             }
