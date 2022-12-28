@@ -35,6 +35,8 @@ class Program
 
         YouTubeService youtubeService = await CreateYouTubeService();
 
+        
+
         var searchRequest = youtubeService.Videos.List("snippet");
         searchRequest.Id = videoId;
         var searchResponse = await searchRequest.ExecuteAsync();
@@ -45,48 +47,38 @@ class Program
 
         if (youTubeVideo != null)
         {
-            Console.WriteLine($"VideoId : {youTubeVideo.Id}");
-            Console.WriteLine($"Description : {youTubeVideo.Snippet.Description}");
-            Console.WriteLine($"Title : {youTubeVideo.Snippet.Title}");
-            Console.WriteLine($"ChannelTitle : {youTubeVideo.Snippet.ChannelTitle}");
+            var captionListRequest = youtubeService.Captions.List("id,snippet", videoId);
+            var captionListResponse = captionListRequest.Execute();
+            var currentSubtitles =
+                captionListResponse.Items.Select(c => c.Snippet.Language.ToLower())
+                                         .ToList();
+
+            currentSubtitles.ForEach(subtitle => Console.WriteLine($"Subtitle language: {subtitle}"));
+
+            Console.WriteLine($"Current subtitles count: {currentSubtitles.Count}");
+
+            // Get the list of language codes
+            var translatedSubtitles = languageCodeMap.Keys.ToList();
+
+            var missingSubtitles = translatedSubtitles.Except(currentSubtitles).ToList();
+
+            missingSubtitles.ForEach(subtitle => Console.WriteLine($"Missing subtitle language: {subtitle}"));
+
+            Console.WriteLine();
+            Console.WriteLine($"Missing subtitles count: {missingSubtitles.Count}");
+
+            // Add missing subtitles
+            foreach (var subtitle in missingSubtitles)
+            {
+                languageCode = subtitle;
+                languageName = languageCodeMap[subtitle];
+
+                string translatedFileName = $@"{translationFolder}\{fileName}-{languageName}.vtt";
+
+                await AddVideoCaption(videoId, languageCode, languageName, translatedFileName);
+            }
         }
-
-        // Get the list of language codes for subtitles
-        //https://googleapis.dev/dotnet/Google.Apis.YouTube.v3/latest/api/Google.Apis.YouTube.v3.Data.VideoLocalization.html
-        var currentSubtitles = searchResponse.Items
-          .Select(video => video.Snippet.Localized.Title) 
-          .ToList();
-
-        currentSubtitles.ForEach(subtitle => Console.WriteLine($"Current subtitle language: {subtitle}"));
-
-        // Get the list of language codes
-        var translatedSubtitles = languageCodeMap.Keys.ToList();
-
-        var missingSubtitles = translatedSubtitles.Except(currentSubtitles);
-
-        missingSubtitles.ToList().ForEach(subtitle => Console.WriteLine($"Missing subtitle language: {subtitle}"));
-
-        // Add missing subtitles
-        foreach (var subtitle in missingSubtitles)
-        {
-            languageCode = subtitle;
-            languageName = languageCodeMap[subtitle];
-
-            string translatedFileName = $@"{translationFolder}\{fileName}-{languageName}.vtt";
-
-            // await AddVideoCaption(videoId, languageCode, languageName, translatedFileName);
-        }
-
-        // foreach (KeyValuePair<string, string> languageSetting in languageCodeMap)
-        // {
-        //     languageCode = languageSetting.Key;
-        //     languageName = languageSetting.Value;
-
-        //     string translatedFileName = $@"{translationFolder}\{fileName}-{languageName}.vtt";
-
-        //     await AddVideoCaption(videoId, languageCode, languageName, translatedFileName);
-        // }
-
+        
         Console.WriteLine("Press any key to continue...");
         Console.ReadKey();
     }
@@ -137,7 +129,7 @@ class Program
             captionRequest.ResponseReceived += CaptionRequest_ResponseReceived;
 
             //finally upload the request... and wait.
-           // await captionRequest.UploadAsync();
+            await captionRequest.UploadAsync();
 
             Console.WriteLine();
             Console.WriteLine($"Uploaded {subtitleFileName}, in {languageName}");
