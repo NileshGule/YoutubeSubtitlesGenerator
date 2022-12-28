@@ -75,7 +75,7 @@ class Program
 
                 string translatedFileName = $@"{translationFolder}\{fileName}-{languageName}.vtt";
 
-                // await AddVideoCaption(videoId, languageCode, languageName, translatedFileName);
+                await AddVideoCaption(videoId, languageCode, languageName, translatedFileName);
             }
         }
         
