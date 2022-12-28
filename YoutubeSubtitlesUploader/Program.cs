@@ -47,8 +47,8 @@ class Program
 
         if (youTubeVideo != null)
         {
-            var captionListRequest = youtubeService.Captions.List("id,snippet", videoId);
-            var captionListResponse = captionListRequest.Execute();
+            var captionListResponse = youtubeService.Captions.List("id,snippet", videoId).Execute();
+            
             var currentSubtitles =
                 captionListResponse.Items.Select(c => c.Snippet.Language.ToLower())
                                          .ToList();
@@ -75,7 +75,7 @@ class Program
 
                 string translatedFileName = $@"{translationFolder}\{fileName}-{languageName}.vtt";
 
-                await AddVideoCaption(videoId, languageCode, languageName, translatedFileName);
+                // await AddVideoCaption(videoId, languageCode, languageName, translatedFileName);
             }
         }
         
