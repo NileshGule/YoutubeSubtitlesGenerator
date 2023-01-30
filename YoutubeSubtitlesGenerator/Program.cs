@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -13,6 +14,8 @@ namespace YoutubeSubtitlesGenerator
 {
     class Program
     {
+        static string destinationFolder;
+
         static async Task Main(string[] args)
         {
             // string textToTranslate = "I would really like to drive your car around the block a few times!";
@@ -37,18 +40,49 @@ namespace YoutubeSubtitlesGenerator
                 //Console.WriteLine($"Text to translate : {Environment.NewLine}{textToTranslate}");
             }
 
+            destinationFolder = ConfigurationManager.AppSettings["destinationFolder"];
+
             string fileName = Path.GetFileNameWithoutExtension($@"{inputFileName}");
+
+            // get the current files in destination folder
+            List<string> existingFiles = Directory.GetFiles(destinationFolder)
+                .Where(file => Path.GetFileName(file).StartsWith(fileName))
+                .ToList();
+
+            Console.WriteLine($"Existing Files in the directory : {existingFiles.Count}");
+
+            List<string> existingFileLanguages = new List<string>();
+
+            foreach (string file in existingFiles)
+            {
+                string filename = Path.GetFileNameWithoutExtension(file);
+                int index = filename.IndexOf(fileName);
+
+                //consider the '-' in the filename and increment the index eg -Hindi, -Arabic etc
+                string language = filename.Remove(index, fileName.Length+1);
+                existingFileLanguages.Add(language);
+            }
+
+            Dictionary<string, string> languageCodeMap = GetLanguageCodeMapping();
+
+            // Get the list of language codes
+            var filesToTranslate = languageCodeMap.Values.ToList();
+
+            var missingSubtitles = filesToTranslate.Except(existingFileLanguages).ToList();
+
+            Console.WriteLine();
+            Console.WriteLine($"Missing subtitles count: {missingSubtitles.Count}");
+
 
             object[] body = new object[] { new { Text = textToTranslate } };
             var requestBody = JsonConvert.SerializeObject(body);
 
             Console.OutputEncoding = Encoding.Unicode;
 
-            Dictionary<string, string> languageCodeMap = GetLanguageCodeMapping();
-
-            foreach (KeyValuePair<string, string> languageSetting in languageCodeMap)
+            foreach (string subtitleLanguage in missingSubtitles)
             {
-                await TranslateSubtitle(fileName, requestBody, languageSetting)
+                string subtitleLanguageCode = languageCodeMap.First(x => x.Value == subtitleLanguage).Key;
+                await TranslateSubtitle(fileName, requestBody, subtitleLanguageCode, subtitleLanguage)
                     .ConfigureAwait(false);
             }
 
@@ -64,11 +98,8 @@ namespace YoutubeSubtitlesGenerator
 
         }
 
-        private static async Task TranslateSubtitle(string fileName, string textToTranslate, KeyValuePair<string, string> languageSetting)
+        private static async Task TranslateSubtitle(string fileName, string textToTranslate, string languageCode, string languageValue)
         {
-            string languageCode = languageSetting.Key.ToString();
-            string languageValue = languageSetting.Value.ToString();
-
             string defaultVideoLanguage = ConfigurationManager.AppSettings["defaultVideoLanguage"];
 
             string route = $"/translate?api-version=3.0&from={defaultVideoLanguage}&to={languageCode}";
@@ -99,7 +130,7 @@ namespace YoutubeSubtitlesGenerator
 
             //string outputDirectory = @"C:\Users\niles\Downloads\TranslatedOutput";
 
-            string destinationFolder = ConfigurationManager.AppSettings["destinationFolder"];
+            //string destinationFolder = ConfigurationManager.AppSettings["destinationFolder"];
             Console.WriteLine($"Destination folder : {destinationFolder}");
 
             string webVttPrefix = string.Concat("WEBVTT", Environment.NewLine, Environment.NewLine);
