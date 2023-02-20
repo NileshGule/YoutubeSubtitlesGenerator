@@ -63,8 +63,13 @@ class Program
             Console.WriteLine();
             Console.WriteLine($"Missing subtitles count: {missingSubtitles.Count}");
 
+            // Google Data API is able to upload max of 26 Subtitle languages ata time
+            // limit the max number to 25 subtitles in one go
+
+            const int MAX_SUBTITLES_BATCH_SIZE = 25;
+
             // Add missing subtitles
-            foreach (var subtitle in missingSubtitles)
+            foreach (var subtitle in missingSubtitles.Take(MAX_SUBTITLES_BATCH_SIZE))
             {
                 languageCode = subtitle;
                 languageName = languageCodeMap[subtitle];
