@@ -6,6 +6,8 @@
 
 client_secrets.json
 
+artifacts-dotnet-releaser
+
 # User-specific files
 *.suo
 *.user

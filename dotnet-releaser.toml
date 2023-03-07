@@ -1,0 +1,6 @@
+# configuration file for dotnet-releaser
+[msbuild]
+project = "YoutubeSubtitlesGenerator.sln"
+[github]
+user = "NileshGule"
+repo = "YoutubeSubtitlesGenerator"
