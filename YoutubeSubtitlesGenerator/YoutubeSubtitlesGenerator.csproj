@@ -2,8 +2,24 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <!-- <TargetFramework>netcoreapp3.1</TargetFramework> -->
+    <TargetFramework>net6.0</TargetFramework>
+    <Version>1.0.0</Version>
+    <Description>Generates subtitles for YouTube video</Description> 
+    <Copyright>Nilesh Gule</Copyright>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <Authors>Nilesh Gule</Authors>
+    <PackageTags>YouTubeSubtitlesGeenrator</PackageTags>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <PackageReleaseNotes>https://github.com/nileshgule/$(AssemblyName)/blob/master/changelog.md</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/nileshgule/$(AssemblyName)</PackageProjectUrl>
+    <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />

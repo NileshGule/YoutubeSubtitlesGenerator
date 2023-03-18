@@ -4,3 +4,35 @@ project = "YoutubeSubtitlesGenerator.sln"
 [github]
 user = "NileshGule"
 repo = "YoutubeSubtitlesGenerator"
+version_prefix = "v"
+
+# Create zip files only for Windows platforms
+[[pack]]
+rid = ["win-x64", "win-x86"]
+kinds = ["zip"]
+
+[[pack]]
+publish = false
+rid = ["win-arm", "win-arm64"]
+kinds = ["zip"]
+
+[[pack]]
+publish = false
+rid = ["linux-x64", "linux-arm", "linux-arm64"]
+kinds = ["deb", "tar"]
+# Default targets for Linux/Redhat compatible distro with rpm and tar packages
+[[pack]]
+publish = false
+rid = ["rhel-x64"]
+kinds = ["rpm", "tar"]
+# Default targets for macOS, only tar files for this platform
+[[pack]]
+publish = false
+rid = ["osx-x64", "osx-arm64"]
+kinds = ["tar"]
+
+[brew]
+publish = false
+
+[scoop]
+publish = false
