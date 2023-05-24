@@ -120,31 +120,41 @@ namespace YoutubeSubtitlesGenerator
         }
 
         private static void WriteTranslatedText(string fileName, string languageValue, string result)
-        {
-            //Console.WriteLine(result);
-            dynamic jsonResult = JsonConvert.DeserializeObject(result);
-            Console.WriteLine($"Writing {languageValue} converted output");
+                {
+                    Console.WriteLine($"Writing {languageValue} converted output");
 
-            string convertedOutput = jsonResult.First.translations.First.text;
-            // Console.WriteLine(convertedOutput);
+                    dynamic jsonResult = JsonConvert.DeserializeObject(result);
 
-            //string outputDirectory = @"C:\Users\niles\Downloads\TranslatedOutput";
+                    if (jsonResult != null && jsonResult.First != null && jsonResult.First.translations != null && jsonResult.First.translations.First != null)
+                    {
+                        string convertedOutput = jsonResult.First.translations.First.text;
 
-            //string destinationFolder = ConfigurationManager.AppSettings["destinationFolder"];
-            Console.WriteLine($"Destination folder : {destinationFolder}");
+                        string webVttPrefix = string.Concat("WEBVTT", Environment.NewLine, Environment.NewLine);
+                        string finalText = string.Concat(webVttPrefix, convertedOutput);
 
-            string webVttPrefix = string.Concat("WEBVTT", Environment.NewLine, Environment.NewLine);
+                        string destinationFolder = ConfigurationManager.AppSettings["destinationFolder"];
+                        Console.WriteLine($"Destination folder: {destinationFolder}");
 
-            string finalText = string.Concat(webVttPrefix, convertedOutput);
+                        string outputFile = Path.Combine(destinationFolder, $"{fileName}-{languageValue}.vtt");
+                        File.WriteAllText(outputFile, finalText);
 
-            File.WriteAllText($@"{destinationFolder}\{fileName}-{languageValue}.vtt", finalText);
-            Console.WriteLine($"Translated subtitles for {languageValue} saved successfully");
-            Console.WriteLine();
-        }
+                        Console.WriteLine($"Translated subtitles for {languageValue} saved successfully");
+                        Console.WriteLine();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Unable to retrieve the translated text from the JSON response.");
+                        Console.WriteLine("JSON Response:");
+                        Console.WriteLine(result);
+                    }
+                }
 
         private static void BuildRequest(string textToTranslate, string route, HttpRequestMessage request)
         {
             string apiKey = Environment.GetEnvironmentVariable("TranslatorAPIKey", EnvironmentVariableTarget.Machine);
+
+            ///// Use this If environment variable has errors, 
+            //string apiKey = "";
 
             string translatorRegion = ConfigurationManager.AppSettings["translatorRegion"];
             string translatorEndpoint = ConfigurationManager.AppSettings["translatorEndpoint"];

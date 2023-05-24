@@ -74,7 +74,7 @@ class Program
                 languageCode = subtitle;
                 languageName = languageCodeMap[subtitle];
 
-                string translatedFileName = $@"{translationFolder}\{fileName}-{languageName}.vtt";
+                string translatedFileName = $@"{translationFolder}/{fileName}-{languageName}.vtt";
 
                 Console.WriteLine($"Uploading {translatedFileName} for language {languageName}");
 
