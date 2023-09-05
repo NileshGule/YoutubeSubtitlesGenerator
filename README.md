@@ -18,6 +18,14 @@ I have used Powershell to add the environment variable. You can use any other ap
 
 ```
 
+If you are on MacOS, you can store the API key in the .bashrc or .zshrc file as an environment variable.
+
+```bash
+
+export TranslatorAPIKey="<<replace_with_your_PAI-key>>"
+
+```
+
 ### List of Languages for subtitles
 
 The subtitles are translated into the languages listed below.

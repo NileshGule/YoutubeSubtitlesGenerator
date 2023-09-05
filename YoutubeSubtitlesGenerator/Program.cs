@@ -137,19 +137,29 @@ namespace YoutubeSubtitlesGenerator
 
             string finalText = string.Concat(webVttPrefix, convertedOutput);
 
-            File.WriteAllText($@"{destinationFolder}\{fileName}-{languageValue}.vtt", finalText);
+            string fileNameWithExtension = string.Concat($@"{fileName}-{languageValue}", ".vtt");
+            
+            string completeFileName = Path.Combine(destinationFolder, fileNameWithExtension);
+
+            // File.WriteAllText(completeFileName, finalText);
+            
             Console.WriteLine($"Translated subtitles for {languageValue} saved successfully");
             Console.WriteLine();
         }
 
         private static void BuildRequest(string textToTranslate, string route, HttpRequestMessage request)
         {
-            string apiKey = Environment.GetEnvironmentVariable("TranslatorAPIKey", EnvironmentVariableTarget.Machine);
+            // EnvironemntVariableTarget.Machine is to be used on Windows only. 
+            // Replace the below line with the Mac equivalent when running on MacOS
 
+            // string apiKey = Environment.GetEnvironmentVariable("TranslatorAPIKey", EnvironmentVariableTarget.Machine);
+            string apiKey = Environment.GetEnvironmentVariable("TranslatorAPIKey", EnvironmentVariableTarget.Process);
+
+            // Console.WriteLine($"API Key : {apiKey}");
+            
             string translatorRegion = ConfigurationManager.AppSettings["translatorRegion"];
             string translatorEndpoint = ConfigurationManager.AppSettings["translatorEndpoint"];
             
-
             request.Method = HttpMethod.Post;
             request.RequestUri = new Uri(translatorEndpoint + route);
             
