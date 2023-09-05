@@ -136,6 +136,9 @@ class Program
 
             Console.WriteLine();
             Console.WriteLine($"Uploaded {subtitleFileName}, in {languageName}");
+
+            Console.WriteLine();
+            Console.WriteLine();
         }
 
 
