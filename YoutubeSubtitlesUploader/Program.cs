@@ -74,11 +74,13 @@ class Program
                 languageCode = subtitle;
                 languageName = languageCodeMap[subtitle];
 
-                string translatedFileName = $@"{translationFolder}\{fileName}-{languageName}.vtt";
+                string fileNameWithExtension = string.Concat($@"{fileName}-{languageName}", ".vtt");
+            
+                string completeFileName = Path.Combine(translationFolder, fileNameWithExtension);
 
-                Console.WriteLine($"Uploading {translatedFileName} for language {languageName}");
+                Console.WriteLine($"Uploading {completeFileName} for language {languageName}");
 
-                await AddVideoCaption(videoId, languageCode, languageName, translatedFileName);
+                await AddVideoCaption(videoId, languageCode, languageName, completeFileName);
             }
         }
         

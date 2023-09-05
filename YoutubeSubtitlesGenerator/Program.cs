@@ -141,7 +141,7 @@ namespace YoutubeSubtitlesGenerator
             
             string completeFileName = Path.Combine(destinationFolder, fileNameWithExtension);
 
-            // File.WriteAllText(completeFileName, finalText);
+            File.WriteAllText(completeFileName, finalText);
             
             Console.WriteLine($"Translated subtitles for {languageValue} saved successfully");
             Console.WriteLine();
