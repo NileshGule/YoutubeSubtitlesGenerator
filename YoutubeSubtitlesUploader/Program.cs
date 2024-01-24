@@ -63,7 +63,7 @@ class Program
             Console.WriteLine();
             Console.WriteLine($"Missing subtitles count: {missingSubtitles.Count}");
 
-            // Google Data API is able to upload max of 26 Subtitle languages ata time
+            // Google Data API is able to upload max of 26 Subtitle languages at a time
             // limit the max number to 25 subtitles in one go
 
             const int MAX_SUBTITLES_BATCH_SIZE = 25;
@@ -77,6 +77,13 @@ class Program
                 string fileNameWithExtension = string.Concat($@"{fileName}-{languageName}", ".vtt");
             
                 string completeFileName = Path.Combine(translationFolder, fileNameWithExtension);
+
+                // Check if the file exists
+                if (!File.Exists(completeFileName))
+                {
+                    Console.WriteLine($"File {fileNameWithExtension} does not exist. Skipping...");
+                    continue;
+                }
 
                 Console.WriteLine($"Uploading {completeFileName} for language {languageName}");
 
