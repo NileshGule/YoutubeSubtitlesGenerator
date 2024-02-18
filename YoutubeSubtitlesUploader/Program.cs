@@ -12,6 +12,8 @@ class Program
 
     static String selectedFile;
 
+    static string translationFolder;
+
     static async Task Main(string[] args)
     {
         string videoId;
@@ -31,7 +33,7 @@ class Program
         
         Dictionary<string, string> languageCodeMap = GetLanguageCodeMapping();
 
-        string translationFolder = ConfigurationManager.AppSettings["translationFolder"];
+        translationFolder = ConfigurationManager.AppSettings["translationFolder"];
         Console.WriteLine($"Directory with translated files: {translationFolder}");
 
         YouTubeService youtubeService = await CreateYouTubeService();
@@ -92,6 +94,8 @@ class Program
             }
         }
         
+        await CleanupOlderFiles();
+
         Console.WriteLine("Press any key to continue...");
         Console.ReadKey();
     }
@@ -246,6 +250,33 @@ class Program
                 Console.WriteLine();
                 Console.WriteLine($"An error occured while uploading the subtitles. {Environment.NewLine}{progress.Exception}");
                 break;
+        }
+    }
+
+    private static async Task CleanupOlderFiles()
+    {
+        Console.WriteLine($"Cleaning up older files in {translationFolder}");
+
+        // Check if the folder exists
+        if (Directory.Exists(translationFolder))
+        {
+            string[] files = Directory.GetFiles(translationFolder, "*.vtt");
+
+            // Sort the files by creation date in descending order
+            var filesToDelete = files.Where(file => File.GetCreationTime(file) < DateTime.Now.AddMonths(-2));
+
+            // Delete the older files
+            foreach (var file in filesToDelete)
+            {
+                File.Delete(file);
+                Console.WriteLine($"Deleted {file}");
+            }
+
+            if(filesToDelete.Count() > 0)
+            {
+                // Display the confirmation message
+                Console.WriteLine("The .VTT files older than 2 months have been deleted.");
+            }
         }
     }
 }
