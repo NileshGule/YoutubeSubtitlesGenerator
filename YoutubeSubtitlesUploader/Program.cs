@@ -8,6 +8,10 @@ using Google.Apis.Upload;
 
 class Program
 {
+    static List<String> vttFiles;
+
+    static String selectedFile;
+
     static async Task Main(string[] args)
     {
         string videoId;
@@ -15,19 +19,16 @@ class Program
         string languageCode;
         string languageName;
 
-        if (args.Length != 2)
-        {
-            Console.WriteLine($"Missing input parameters. {Environment.NewLine} Cannot continue without the Youtube video ID and input file.");
-            return;
-        }
-        else
-        {
-            videoId = args[0];
+        await ListFiles();
 
-            fileName = args[1];
-            Console.WriteLine($"Input file name : {fileName}");
-        }
+        Console.WriteLine();
+        await SelectFileToUpload();
 
+        videoId = Path.GetFileNameWithoutExtension(selectedFile);
+
+        fileName = videoId;
+        Console.WriteLine($"YouTube video ID : {fileName}");
+        
         Dictionary<string, string> languageCodeMap = GetLanguageCodeMapping();
 
         string translationFolder = ConfigurationManager.AppSettings["translationFolder"];
@@ -94,6 +95,60 @@ class Program
         Console.WriteLine("Press any key to continue...");
         Console.ReadKey();
     }
+
+     private static async Task ListFiles()
+        {
+            string downloadsFolder = ConfigurationManager.AppSettings["downloadsFolder"];
+            Console.WriteLine($"Downloads folder : {downloadsFolder}");
+
+            // Check if the folder exists
+            if (Directory.Exists(downloadsFolder))
+            {
+
+                string[] files = Directory.GetFiles(downloadsFolder, "*.vtt");
+
+                Console.WriteLine($"Number of VTT files in the directory : {files.Length}");
+
+                // Sort the files by creation date in descending order
+                vttFiles = files.OrderByDescending(file => File.GetCreationTime(file)).Take(5).ToList();
+
+                
+                // Display the files with their name and creation date
+                Console.WriteLine();
+                Console.WriteLine("The top 5 files sorted by creation date are:");
+                int index = 1;
+                foreach (var file in vttFiles)
+                {
+                    Console.WriteLine($"{index}. {Path.GetFileName(file)} ({File.GetCreationTime(file).ToString("F")})");
+                    index++;
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Folder {downloadsFolder} does not exist. Please check the configuration");
+            }
+        }
+
+        private static async Task SelectFileToUpload()
+        {
+            Console.WriteLine();
+            Console.WriteLine("Please select the file to upload (1-5):");
+            int choice = int.Parse(Console.ReadLine());
+
+            // Validate the user input
+            if (choice < 1 || choice > 5)
+            {
+                Console.WriteLine("Invalid input. Please try again.");
+                await SelectFileToUpload();
+                return;
+            }
+
+            // Get the selected video from the list
+            selectedFile = vttFiles[choice - 1];
+
+            // Display the selected video information
+            Console.WriteLine($"You selected: {selectedFile}");
+        }
 
     private static Dictionary<string, string> GetLanguageCodeMapping()
     {
@@ -194,5 +249,7 @@ class Program
         }
     }
 }
+
+
 
        
