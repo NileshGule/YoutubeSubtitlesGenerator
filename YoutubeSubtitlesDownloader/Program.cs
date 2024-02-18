@@ -66,22 +66,19 @@ class Program
             // - Type: video
             // - Max results: 5
             var searchRequest = youtubeService.Search.List("snippet");
-            searchRequest.ChannelId = Environment.GetEnvironmentVariable("YOUTUBE_CHANNEL_ID", EnvironmentVariableTarget.User);
+            searchRequest.ChannelId = Environment.GetEnvironmentVariable("YOUTUBE_CHANNEL_ID");
             searchRequest.Order = SearchResource.ListRequest.OrderEnum.Date;
             searchRequest.Type = "video";
             searchRequest.MaxResults = 5;
 
-            // Execute the search request and get the response
             var searchResponse = await searchRequest.ExecuteAsync();
 
-            // Convert the search results to a list of videos
             videos = searchResponse.Items.Select(item => new Video()
             {
                 Id = item.Id.VideoId,
                 Title = item.Snippet.Title
             }).ToList();
 
-            // Display the videos with their name and id
             Console.WriteLine("The most recent 5 videos are:");
             for (int i = 0; i < videos.Count; i++)
             {

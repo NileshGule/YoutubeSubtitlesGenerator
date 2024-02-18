@@ -16,30 +16,30 @@ namespace YoutubeSubtitlesGenerator
     {
         static string destinationFolder;
 
+        static List<String> vttFiles;
+
+        static String selectedFile;
+
         static async Task Main(string[] args)
         {
-            // string textToTranslate = "I would really like to drive your car around the block a few times!";
+            
             string textToTranslate;
             string inputFileName;
 
-            if (args.Length == 0)
-            {
-                Console.WriteLine($"Missing input file name. {Environment.NewLine} Cannot continue without the input file.");
-                return;
-            }
-            else
-            {
-                inputFileName = args[0];
-                Console.WriteLine($"Input file name : {inputFileName}");
+            await ListFiles();
 
-                // remove WEBVTT, kind: captions Language: en lines from original file by skipping first 4 lines
-                File.WriteAllLines(inputFileName, File.ReadLines(inputFileName).Skip(4).ToList());
+            Console.WriteLine();
+            await SelectFileToTranslate();
+            
+            inputFileName = selectedFile;
+            Console.WriteLine($"Input file name : {inputFileName}");
 
-                textToTranslate = File.ReadAllText($@"{inputFileName}").Replace("&nbsp;", "");
+            // remove WEBVTT, kind: captions Language: en lines from original file by skipping first 4 lines
+            File.WriteAllLines(inputFileName, File.ReadLines(inputFileName).Skip(4).ToList());
 
-                //Console.WriteLine($"Text to translate : {Environment.NewLine}{textToTranslate}");
-            }
+            textToTranslate = File.ReadAllText($@"{inputFileName}").Replace("&nbsp;", "");
 
+            
             destinationFolder = ConfigurationManager.AppSettings["destinationFolder"];
 
             string fileName = Path.GetFileNameWithoutExtension($@"{inputFileName}");
@@ -86,6 +86,60 @@ namespace YoutubeSubtitlesGenerator
                     .ConfigureAwait(false);
             }
 
+        }
+
+        private static async Task ListFiles()
+        {
+            string downloadsFolder = ConfigurationManager.AppSettings["downloadsFolder"];
+            Console.WriteLine($"Downloads folder : {downloadsFolder}");
+
+            // Check if the folder exists
+            if (Directory.Exists(downloadsFolder))
+            {
+
+                string[] files = Directory.GetFiles(downloadsFolder, "*.vtt");
+
+                Console.WriteLine($"Number of VTT files in the directory : {files.Length}");
+
+                // Sort the files by creation date in descending order
+                vttFiles = files.OrderByDescending(file => File.GetCreationTime(file)).Take(5).ToList();
+
+                
+                // Display the files with their name and creation date
+                Console.WriteLine();
+                Console.WriteLine("The top 5 files sorted by creation date are:");
+                int index = 1;
+                foreach (var file in vttFiles)
+                {
+                    Console.WriteLine($"{index}. {Path.GetFileName(file)} ({File.GetCreationTime(file).ToString("F")})");
+                    index++;
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Folder {downloadsFolder} does not exist. Please check the configuration");
+            }
+        }
+
+        private static async Task SelectFileToTranslate()
+        {
+            Console.WriteLine();
+            Console.WriteLine("Please select the file to translate (1-5):");
+            int choice = int.Parse(Console.ReadLine());
+
+            // Validate the user input
+            if (choice < 1 || choice > 5)
+            {
+                Console.WriteLine("Invalid input. Please try again.");
+                await SelectFileToTranslate();
+                return;
+            }
+
+            // Get the selected video from the list
+            selectedFile = vttFiles[choice - 1];
+
+            // Display the selected video information
+            Console.WriteLine($"You selected: {selectedFile}");
         }
 
         private static Dictionary<string, string> GetLanguageCodeMapping()
