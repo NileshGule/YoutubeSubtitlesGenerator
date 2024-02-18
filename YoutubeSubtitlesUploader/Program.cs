@@ -6,31 +6,38 @@ using System.Collections;
 using System.Configuration;
 using Google.Apis.Upload;
 
+// Simplify the below code to make it more maintainable and easier to understand
+
 class Program
 {
-    static List<String> vttFiles;
+    static List<String>? vttFiles;
 
-    static String selectedFile;
+    static String? selectedFile;
 
-    static string translationFolder;
+    static string? translationFolder;
 
     static async Task Main(string[] args)
     {
-        string videoId;
-        string fileName;
-        string languageCode;
-        string languageName;
+        await ListAndSelectFile();
+        await ProcessVideoSubtitles();
+        await CleanupOlderFiles();
 
+        Console.WriteLine("Press any key to continue...");
+        Console.ReadKey();
+    }
+
+    static async Task ListAndSelectFile()
+    {
         await ListFiles();
-
-        Console.WriteLine();
         await SelectFileToUpload();
+    }
 
-        videoId = Path.GetFileNameWithoutExtension(selectedFile);
-
-        fileName = videoId;
+    static async Task ProcessVideoSubtitles()
+    {
+        string videoId = Path.GetFileNameWithoutExtension(selectedFile)!;
+        string fileName = videoId;
         Console.WriteLine($"YouTube video ID : {fileName}");
-        
+
         Dictionary<string, string> languageCodeMap = GetLanguageCodeMapping();
 
         translationFolder = ConfigurationManager.AppSettings["translationFolder"];
@@ -38,66 +45,76 @@ class Program
 
         YouTubeService youtubeService = await CreateYouTubeService();
 
-        var searchRequest = youtubeService.Videos.List("snippet");
-        searchRequest.Id = videoId;
-        var searchResponse = await searchRequest.ExecuteAsync();
-
-        Console.WriteLine($"Total videos found: {searchResponse.Items.Count}");
-
+        var searchResponse = await GetVideoDetails(youtubeService, videoId);
         var youTubeVideo = searchResponse.Items.FirstOrDefault();
 
         if (youTubeVideo != null)
         {
-            var captions = youtubeService.Captions.List("id,snippet", videoId).Execute();
-            
-            var currentSubtitles =
-                captions.Items.Select(c => c.Snippet.Language.ToLower())
-                                         .ToList();
+            var captions = await GetVideoCaptions(youtubeService, videoId);
+            var currentSubtitles = GetCurrentSubtitles(captions);
 
-            currentSubtitles.ForEach(subtitle => Console.WriteLine($"Subtitle language: {subtitle}"));
+            PrintSubtitleLanguages(currentSubtitles);
 
-            Console.WriteLine($"Current subtitles count: {currentSubtitles.Count}");
-
-            // Get the list of language codes
-            var translatedSubtitles = languageCodeMap.Keys.ToList();
-
-            var missingSubtitles = translatedSubtitles.Except(currentSubtitles).ToList();
+            var missingSubtitles = GetMissingSubtitles(languageCodeMap, currentSubtitles);
 
             Console.WriteLine();
             Console.WriteLine($"Missing subtitles count: {missingSubtitles.Count}");
 
-            // Google Data API is able to upload max of 26 Subtitle languages at a time
-            // limit the max number to 25 subtitles in one go
-
             const int MAX_SUBTITLES_BATCH_SIZE = 25;
 
-            // Add missing subtitles
             foreach (var subtitle in missingSubtitles.Take(MAX_SUBTITLES_BATCH_SIZE))
             {
-                languageCode = subtitle;
-                languageName = languageCodeMap[subtitle];
-
-                string fileNameWithExtension = string.Concat($@"{fileName}-{languageName}", ".vtt");
-            
-                string completeFileName = Path.Combine(translationFolder, fileNameWithExtension);
-
-                // Check if the file exists
-                if (!File.Exists(completeFileName))
-                {
-                    Console.WriteLine($"File {fileNameWithExtension} does not exist. Skipping...");
-                    continue;
-                }
-
-                Console.WriteLine($"Uploading {completeFileName} for language {languageName}");
-
-                await AddVideoCaption(videoId, languageCode, languageName, completeFileName);
+                await UploadSubtitleForLanguage(videoId, subtitle, languageCodeMap);
             }
         }
-        
-        await CleanupOlderFiles();
+    }
 
-        Console.WriteLine("Press any key to continue...");
-        Console.ReadKey();
+    static async Task<VideoListResponse> GetVideoDetails(YouTubeService youtubeService, string videoId)
+    {
+        var searchRequest = youtubeService.Videos.List("snippet");
+        searchRequest.Id = videoId;
+        return await searchRequest.ExecuteAsync();
+    }
+
+    static async Task<CaptionListResponse> GetVideoCaptions(YouTubeService youtubeService, string videoId)
+    {
+        return await youtubeService.Captions.List("id,snippet", videoId).ExecuteAsync();
+    }
+
+    static List<string> GetCurrentSubtitles(CaptionListResponse captions)
+    {
+        return captions.Items.Select(c => c.Snippet.Language.ToLower()).ToList();
+    }
+
+    static void PrintSubtitleLanguages(List<string> currentSubtitles)
+    {
+        currentSubtitles.ForEach(subtitle => Console.WriteLine($"Subtitle language: {subtitle}"));
+        Console.WriteLine($"Current subtitles count: {currentSubtitles.Count}");
+    }
+
+    static List<string> GetMissingSubtitles(Dictionary<string, string> languageCodeMap, List<string> currentSubtitles)
+    {
+        var translatedSubtitles = languageCodeMap.Keys.ToList();
+        return translatedSubtitles.Except(currentSubtitles).ToList();
+    }
+
+    static async Task UploadSubtitleForLanguage(string videoId, string subtitle, Dictionary<string, string> languageCodeMap)
+    {
+        string languageCode = subtitle;
+        string languageName = languageCodeMap[subtitle];
+
+        string fileNameWithExtension = string.Concat($@"{videoId}-{languageName}", ".vtt");
+        string completeFileName = Path.Combine(translationFolder, fileNameWithExtension);
+
+        if (!File.Exists(completeFileName))
+        {
+            Console.WriteLine($"File {fileNameWithExtension} does not exist. Skipping...");
+            return;
+        }
+
+        Console.WriteLine($"Uploading {completeFileName} for language {languageName}");
+
+        await AddVideoCaption(videoId, languageCode, languageName, completeFileName);
     }
 
      private static async Task ListFiles()
@@ -279,8 +296,4 @@ class Program
             }
         }
     }
-}
-
-
-
-       
+}     
