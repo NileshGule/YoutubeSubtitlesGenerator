@@ -6,8 +6,6 @@ using System.Collections;
 using System.Configuration;
 using Google.Apis.Upload;
 
-// Simplify the below code to make it more maintainable and easier to understand
-
 class Program
 {
     static List<String>? vttFiles;
@@ -60,27 +58,33 @@ class Program
             Console.WriteLine();
             Console.WriteLine($"Missing subtitles count: {missingSubtitles.Count}");
 
-            const int MAX_SUBTITLES_BATCH_SIZE = 25;
+            // Google Data API is able to upload max of 26 Subtitle languages at a time
+            // limit the max number to 25 subtitles in one go
 
+            const int MAX_SUBTITLES_BATCH_SIZE = 25;
+            // Add missing subtitles
             foreach (var subtitle in missingSubtitles.Take(MAX_SUBTITLES_BATCH_SIZE))
             {
-                await UploadSubtitleForLanguage(videoId, subtitle, languageCodeMap);
+                string languageCode = subtitle;
+                string languageName = languageCodeMap[subtitle];
+                string fileNameWithExtension = string.Concat($@"{fileName}-{languageName}", ".vtt");
+
+                string completeFileName = Path.Combine(translationFolder, fileNameWithExtension);
+
+                // Check if the file exists
+                if (!File.Exists(completeFileName))
+                {
+                    Console.WriteLine($"File {fileNameWithExtension} does not exist. Skipping...");
+                    continue;
+                }
+
+                Console.WriteLine($"Uploading {completeFileName} for language {languageName}");
+
+                await AddVideoCaption(videoId, languageCode, languageName, completeFileName);
             }
         }
     }
-
-    static async Task<VideoListResponse> GetVideoDetails(YouTubeService youtubeService, string videoId)
-    {
-        var searchRequest = youtubeService.Videos.List("snippet");
-        searchRequest.Id = videoId;
-        return await searchRequest.ExecuteAsync();
-    }
-
-    static async Task<CaptionListResponse> GetVideoCaptions(YouTubeService youtubeService, string videoId)
-    {
-        return await youtubeService.Captions.List("id,snippet", videoId).ExecuteAsync();
-    }
-
+    
     static List<string> GetCurrentSubtitles(CaptionListResponse captions)
     {
         return captions.Items.Select(c => c.Snippet.Language.ToLower()).ToList();
@@ -116,62 +120,67 @@ class Program
 
         await AddVideoCaption(videoId, languageCode, languageName, completeFileName);
     }
+    static async Task<VideoListResponse> GetVideoDetails(YouTubeService youtubeService, string videoId)
+    {
+        var searchRequest = youtubeService.Videos.List("snippet");
+        searchRequest.Id = videoId;
+        return await searchRequest.ExecuteAsync();
+    }
 
-     private static async Task ListFiles()
+    static async Task<CaptionListResponse> GetVideoCaptions(YouTubeService youtubeService, string videoId)
+    {
+        return await youtubeService.Captions.List("id,snippet", videoId).ExecuteAsync();
+    }
+      
+    static async Task ListFiles()
+    {
+        string downloadsFolder = ConfigurationManager.AppSettings["downloadsFolder"];
+        Console.WriteLine($"Downloads folder : {downloadsFolder}");
+
+        // Check if the folder exists
+        if (Directory.Exists(downloadsFolder))
         {
-            string downloadsFolder = ConfigurationManager.AppSettings["downloadsFolder"];
-            Console.WriteLine($"Downloads folder : {downloadsFolder}");
 
-            // Check if the folder exists
-            if (Directory.Exists(downloadsFolder))
-            {
+            vttFiles = Directory.GetFiles(downloadsFolder, "*.vtt")
+            .OrderByDescending(File.GetCreationTime)
+            .Take(5)
+            .ToList();
 
-                string[] files = Directory.GetFiles(downloadsFolder, "*.vtt");
+            var topFiles = vttFiles
+            .Select((file, index) =>
+                $"{index + 1}. {Path.GetFileName(file)} ({File.GetCreationTime(file):F})");
 
-                Console.WriteLine($"Number of VTT files in the directory : {files.Length}");
+            Console.WriteLine($"{Environment.NewLine}The top 5 files sorted by creation date are:");
+            Console.WriteLine(string.Join(Environment.NewLine, topFiles));
+        }
+        else
+        {
+            Console.WriteLine($"Folder {downloadsFolder} does not exist. Please check the configuration");
+        }
+    }
 
-                // Sort the files by creation date in descending order
-                vttFiles = files.OrderByDescending(file => File.GetCreationTime(file)).Take(5).ToList();
+    static async Task SelectFileToUpload()
+    {
+        Console.WriteLine();
+        Console.WriteLine("Please select the file to upload (1-5):");
+        int choice = int.Parse(Console.ReadLine());
 
-                
-                // Display the files with their name and creation date
-                Console.WriteLine();
-                Console.WriteLine("The top 5 files sorted by creation date are:");
-                int index = 1;
-                foreach (var file in vttFiles)
-                {
-                    Console.WriteLine($"{index}. {Path.GetFileName(file)} ({File.GetCreationTime(file).ToString("F")})");
-                    index++;
-                }
-            }
-            else
-            {
-                Console.WriteLine($"Folder {downloadsFolder} does not exist. Please check the configuration");
-            }
+        // Validate the user input
+        if (choice < 1 || choice > 5)
+        {
+            Console.WriteLine("Invalid input. Please try again.");
+            await SelectFileToUpload();
+            return;
         }
 
-        private static async Task SelectFileToUpload()
-        {
-            Console.WriteLine();
-            Console.WriteLine("Please select the file to upload (1-5):");
-            int choice = int.Parse(Console.ReadLine());
+        // Get the selected video from the list
+        selectedFile = vttFiles[choice - 1];
 
-            // Validate the user input
-            if (choice < 1 || choice > 5)
-            {
-                Console.WriteLine("Invalid input. Please try again.");
-                await SelectFileToUpload();
-                return;
-            }
+        // Display the selected video information
+        Console.WriteLine($"You selected: {selectedFile}");
+    }
 
-            // Get the selected video from the list
-            selectedFile = vttFiles[choice - 1];
-
-            // Display the selected video information
-            Console.WriteLine($"You selected: {selectedFile}");
-        }
-
-    private static Dictionary<string, string> GetLanguageCodeMapping()
+    static Dictionary<string, string> GetLanguageCodeMapping()
     {
         var section = (Hashtable)ConfigurationManager.GetSection("CodeLanguageMapping");
 
@@ -229,7 +238,7 @@ class Program
 
     }
 
-    private static async Task<YouTubeService> CreateYouTubeService()
+    static async Task<YouTubeService> CreateYouTubeService()
     {
         UserCredential credential;
 
@@ -253,13 +262,13 @@ class Program
         return youtubeService;
     }
 
-    private static void CaptionRequest_ResponseReceived(Caption caption)
+    static void CaptionRequest_ResponseReceived(Caption caption)
     {
         Console.WriteLine();
         Console.WriteLine($"{caption.Snippet.Language} caption status = {caption.Snippet.Status}");
     }
 
-    private static void CaptionRequest_ProgressChanged(IUploadProgress progress)
+    static void CaptionRequest_ProgressChanged(IUploadProgress progress)
     {
         switch (progress.Status)
         {
@@ -270,7 +279,7 @@ class Program
         }
     }
 
-    private static async Task CleanupOlderFiles()
+    static async Task CleanupOlderFiles()
     {
         Console.WriteLine($"Cleaning up older files in {translationFolder}");
 
