@@ -94,31 +94,25 @@ namespace YoutubeSubtitlesGenerator
             Console.WriteLine($"Downloads folder : {downloadsFolder}");
 
             // Check if the folder exists
-            if (Directory.Exists(downloadsFolder))
-            {
-
-                string[] files = Directory.GetFiles(downloadsFolder, "*.vtt");
-
-                Console.WriteLine($"Number of VTT files in the directory : {files.Length}");
-
-                // Sort the files by creation date in descending order
-                vttFiles = files.OrderByDescending(file => File.GetCreationTime(file)).Take(5).ToList();
-
-                
-                // Display the files with their name and creation date
-                Console.WriteLine();
-                Console.WriteLine("The top 5 files sorted by creation date are:");
-                int index = 1;
-                foreach (var file in vttFiles)
-                {
-                    Console.WriteLine($"{index}. {Path.GetFileName(file)} ({File.GetCreationTime(file).ToString("F")})");
-                    index++;
-                }
-            }
-            else
+            if (!Directory.Exists(downloadsFolder))
             {
                 Console.WriteLine($"Folder {downloadsFolder} does not exist. Please check the configuration");
+                return;
             }
+
+            string[] files = Directory.GetFiles(downloadsFolder, "*.vtt");
+
+            Console.WriteLine($"Number of VTT files in the directory : {files.Length}");
+
+            // Sort the files by creation date in descending order
+            vttFiles = files.OrderByDescending(file => File.GetCreationTime(file)).Take(5).ToList();
+
+            // Display the files with their name and creation date
+            Console.WriteLine();
+            Console.WriteLine("The top 5 files sorted by creation date are:");
+            vttFiles.Select((file, index) => $"{index + 1}. {Path.GetFileName(file)} ({File.GetCreationTime(file).ToString("F")})")
+                    .ToList()
+                    .ForEach(Console.WriteLine);
         }
 
         private static async Task SelectFileToTranslate()
@@ -136,7 +130,7 @@ namespace YoutubeSubtitlesGenerator
             }
 
             // Get the selected video from the list
-            selectedFile = vttFiles[choice - 1];
+            selectedFile = vttFiles.ElementAtOrDefault(choice - 1);
 
             // Display the selected video information
             Console.WriteLine($"You selected: {selectedFile}");
