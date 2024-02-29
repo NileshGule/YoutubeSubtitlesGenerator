@@ -105,7 +105,7 @@ class Program
             selectedVideo = videos[choice - 1];
 
             // Display the selected video information
-            Console.WriteLine($"You selected: {selectedVideo.Title} ({selectedVideo.Id})");
+            Console.WriteLine($"You selected: {selectedVideo.Title} ({selectedVideo.Id})");            
         }
 
         // Download the subtitle in English language for the selected video
