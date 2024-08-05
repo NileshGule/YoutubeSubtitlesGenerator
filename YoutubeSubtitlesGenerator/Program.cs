@@ -39,6 +39,8 @@ namespace YoutubeSubtitlesGenerator
 
             textToTranslate = File.ReadAllText($@"{inputFileName}").Replace("&nbsp;", "");
 
+            // Console.WriteLine();
+            // Console.WriteLine($"Text to Translate: {textToTranslate}");
             
             destinationFolder = ConfigurationManager.AppSettings["destinationFolder"];
 
@@ -169,7 +171,7 @@ namespace YoutubeSubtitlesGenerator
 
         private static void WriteTranslatedText(string fileName, string languageValue, string result)
         {
-            //Console.WriteLine(result);
+            // Console.WriteLine(result);
             dynamic jsonResult = JsonConvert.DeserializeObject(result);
             Console.WriteLine($"Writing {languageValue} converted output");
 
@@ -204,7 +206,7 @@ namespace YoutubeSubtitlesGenerator
             string apiKey = Environment.GetEnvironmentVariable("TranslatorAPIKey", EnvironmentVariableTarget.Process);
 
             // Console.WriteLine($"API Key : {apiKey}");
-            
+                        
             string translatorRegion = ConfigurationManager.AppSettings["translatorRegion"];
             string translatorEndpoint = ConfigurationManager.AppSettings["translatorEndpoint"];
             

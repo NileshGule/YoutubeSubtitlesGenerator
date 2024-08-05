@@ -16,6 +16,8 @@ I have used Powershell to add the environment variable. You can use any other ap
 
 [System.Environment]::SetEnvironmentVariable('TranslatorAPIkey','YOUR__API__KEY', 'Machine')
 
+[System.Environment]::SetEnvironmentVariable('YOUTUBE_CHANNEL_ID','YOUR__API__KEY', 'Machine')
+
 ```
 
 ### List of Languages for subtitles

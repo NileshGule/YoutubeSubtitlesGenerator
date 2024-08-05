@@ -335,3 +335,5 @@ ASALocalRun/
 .mfractor/
 
 codealike.json
+
+.DS_Store
